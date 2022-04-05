@@ -28,8 +28,8 @@ In this supplementary material we cover all the code for data processing and ana
 
 6. [Separate Chromosomes](6_LepMap3_SeparateChromosomes.html)
 7. [Order markers](7_LepMap3_OrderMarkers.html)
-8. to come
-9. to come
+8. [Check first maps](8_LepMap3_CheckMaps.html)
+9. [Polish maps](9_LepMap3_PolishMaps.html)
 
 ### Summarise and display linkage maps
 
