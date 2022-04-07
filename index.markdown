@@ -33,7 +33,7 @@ In this supplementary material we cover all the code for data processing and ana
 
 ### Summarise and display linkage maps
 
-10. to come
+10. [Summary table S1](10_Summary_SuppTable1.html)
 11. to come
 12. to come
 
