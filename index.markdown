@@ -33,8 +33,8 @@ In this supplementary material we cover all the code for data processing and ana
 
 ### Summarise and display linkage maps
 
-10. [Summary table S1](10_Summary_SuppTable1.html)
-11. to come
+10. [Summary table S1 - all linkage map markers](10_Summary_SuppTable1.html)
+11. [Table 1 - linkage map summary](11_Summary_Table1.html)
 12. to come
 
 ### Identify sex-linked loci
