@@ -39,9 +39,8 @@ In this supplementary material we cover all the code for data processing and ana
 
 ### Identify sex-linked loci
 
-13. to come
-14. to come
-15. to come
+13. [Sex-linked loci and producing Fig. 2](13_SexLinkedLoci.html)
+14. [Permutation test](14_PermutationTest.html)
 
 Thanks for your interest in our paper, whether it comes from a love for frogs or genomics or either!
 
