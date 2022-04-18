@@ -385,7 +385,7 @@ summary {
 
 <h1 class="title toc-ignore">LepMap3: Produce supplementary Table 1</h1>
 <h4 class="author">Lorenzo Bertola</h4>
-<h4 class="date">Document last run on 2022-04-07</h4>
+<h4 class="date">Document last run on 2022-04-18</h4>
 
 </div>
 
@@ -426,7 +426,7 @@ names(maps.male) &lt;- c(&quot;1&quot;,&quot;10&quot;,&quot;11&quot;,&quot;12&qu
 # this lapply loop reads the individual tab-delimited files into a list
 maps.male &lt;- lapply(maps.male, function(m) {
     read_delim(m, delim = &quot;\t&quot;,
-               skip = 4,
+               skip = 3,
                col_names = c(&quot;ID&quot;,&quot;male&quot;,&quot;female&quot;))
 })
   
@@ -450,7 +450,7 @@ names(maps.female) &lt;- c(&quot;1&quot;,&quot;10&quot;,&quot;11&quot;,&quot;12&
 # this lapply loop reads the individual tab-delimited files into a list
 maps.female &lt;- lapply(maps.female, function(m) {
     read_delim(m, delim = &quot;\t&quot;,
-               skip = 4,
+               skip = 3,
                col_names = c(&quot;ID&quot;,&quot;male&quot;,&quot;female&quot;))
 })
   
@@ -467,22 +467,22 @@ maps.female &lt;- do.call(&quot;rbind&quot;, maps.female)</code></pre>
 <pre><code>## # A tibble: 6 × 4
 ##      ID  male female LG   
 ##   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
-## 1  1129  0     0     1    
-## 2  1352  1.32  0.656 1    
-## 3   363  3.31  1.31  1    
-## 4    52  5.31  1.31  1    
-## 5  6433  5.31 11.8   1    
-## 6  6434  5.31 11.8   1</code></pre>
+## 1  1130  0     0     1    
+## 2  1129  0     0     1    
+## 3  1352  1.32  0.656 1    
+## 4   363  3.31  1.31  1    
+## 5    52  5.31  1.31  1    
+## 6  6433  5.31 11.8   1</code></pre>
 <pre class="r"><code>head(maps.female)</code></pre>
 <pre><code>## # A tibble: 6 × 4
 ##      ID  male female LG   
 ##   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
-## 1   614   0    0.327 1    
-## 2  4509  13.8  0.654 1    
-## 3  4508  13.8  0.654 1    
-## 4  2769  13.8  1.31  1    
-## 5  2771  13.8  1.31  1    
-## 6  2770  13.8  1.31  1</code></pre>
+## 1   613   0    0     1    
+## 2   614   0    0.327 1    
+## 3  4509  13.8  0.654 1    
+## 4  4508  13.8  0.654 1    
+## 5  2769  13.8  1.31  1    
+## 6  2771  13.8  1.31  1</code></pre>
 <p>Let’s join the male informative and female informative map together with a full_join.</p>
 <pre class="r"><code>X &lt;- maps.female %&gt;% select(ID,LG,female)
 Y &lt;- maps.male %&gt;% select(ID,LG,male)
