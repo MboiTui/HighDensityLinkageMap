@@ -35,12 +35,13 @@ In this supplementary material we cover all the code for data processing and ana
 
 10. [Summary table S1 - all linkage map markers](10_Summary_SuppTable1.html)
 11. [Table 1 - linkage map summary](11_Summary_Table1.html)
-12. to come
+12. [Summary figures](12_Summary_Figures.html)
 
 ### Identify sex-linked loci
 
 13. [Sex-linked loci and producing Fig. 2](13_SexLinkedLoci.html)
 14. [Permutation test](14_SexLinkedLoci_PermutationTest.html)
+15. [GWAS for sex](15_SexLinkedLoci_GWAS.html)
 
 Thanks for your interest in our paper, whether it comes from a love for frogs or genomics or either!
 

@@ -8,4 +8,4 @@ In this paper we utilised ddRAD markers produced from one family (2 parents, ~30
 
 To provide an example of the utility of such a resource, we assessed sex linkage in a population of this species from a previous study ([McKnight et al,. 2019](https://doi.org/10.1111/mec.15108)), which used the same ddRAD data. We identified ... sex-linked loci. Of these, ... could be placed on the linkage map, and all but one occurred on Linkage Group 6 between 50 cM and 52 cM.
 
-![ReplaceWithGraphicalAbstract](CuteFrog.png)
+![GraphicalAbstract](graphical_abstract.png)
