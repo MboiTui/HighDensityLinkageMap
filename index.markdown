@@ -43,6 +43,14 @@ In this supplementary material we cover all the code for data processing and ana
 14. [Permutation test](14_SexLinkedLoci_PermutationTest.html)
 15. [GWAS for sex](15_SexLinkedLoci_GWAS.html)
 
-Thanks for your interest in our paper, whether it comes from a love for frogs or genomics or either!
+### Compare linkage map and genome assemblies
+
+16. [Linkage map vs assemblies](16_MapsVersusGenomes.html)
+
+### R and packages version summary
+
+17. [Version summary](17_PackageVersionSummary.html)
+
+Thanks for your interest in our paper, whether it comes from a love for frogs or genomics or both!
 
 For further detail on any of the code, please [email me](mailto:lorenzo.bertola@my.jcu.edu.au)!
