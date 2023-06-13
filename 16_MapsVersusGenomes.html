@@ -356,7 +356,7 @@ pre code {
 
 <h1 class="title toc-ignore">16. Matching linkage maps to X. tropicalis genome</h1>
 <h4 class="author">Lorenzo Bertola</h4>
-<h4 class="date">Document last run on 2023-05-15</h4>
+<h4 class="date">Document last run on 2023-06-13</h4>
 
 </div>
 
@@ -494,14 +494,14 @@ blastn -query 1_extractConsensus/15_5_All_Loci.fa -db 2_blast/2_1_Aurea/LitAur -
 source $CONDA_PROF/conda.sh
 conda activate blast-2.11.0</code></pre>
 <p>Make one database per reference genome (run this command from folder with the 3 assemblies, all named aGenSpe.fasta.gz, where GenSpe is to be replaced with the first three letters of the Genus and species respectively).</p>
-<pre class="bash"><code>for assembly in aBufBuf aDenEbr2 aHylSar
+<pre class="bash"><code>for assembly in aBufBuf LepFal BufGar RhiMar PlaOrn
 do
- gunzip -c ${assembly}.fasta.gz | makeblastdb -in - -title ${assembly} -dbtype nucl -out ${assembly} -parse_seqids
+ gunzip -c ${assembly}.fasta.gz | makeblastdb -in - -title ${assembly} -dbtype nucl -out ${assembly}
 done</code></pre>
 <p>Then I can blast my consensus fasta sequences to each database</p>
-<pre class="bash"><code>for assembly in aBufBuf aDenEbr2 aHylSar
+<pre class="bash"><code>for assembly in aBufBuf LepFal BufGar RhiMar PlaOrn
 do
-  blastn -query 1_extractConsensus/15_5_All_Loci.fa -db 2_blast/${assembly} -out 2_blast/16_2_${assembly}.txt -evalue 1e-15 -outfmt 6 -max_target_seqs 5
+  blastn -query 1_extractConsensus/15_5_All_Loci.fa -db 2_blast/${assembly} -out 2_blast/16_2_${assembly}.txt -evalue 1e-15 -outfmt 6
 done</code></pre>
 <p>I now have all the hits in tabular format. Let’s read in those files to assess the confidence in the hits, and remove any hits where more than 1 hit was found.</p>
 <pre class="r"><code># i can&#39;t remember how to lapply through list of names at the moment, will change later
@@ -515,8 +515,8 @@ matches.buf &lt;- read_delim(
                 &quot;sstart&quot;,&quot;send&quot;,
                 &quot;Evalue&quot;,&quot;score&quot;))
 
-matches.den2 &lt;- read_delim(
-  &quot;../4_blast/2_blast/16_2_aDenEbr2.txt&quot;,
+matches.lep &lt;- read_delim(
+  &quot;../4_blast/2_blast/16_2_LepFal.txt&quot;,
   delim = &quot;\t&quot;,
   col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
                 &quot;Perc&quot;,&quot;Length&quot;,
@@ -525,8 +525,8 @@ matches.den2 &lt;- read_delim(
                 &quot;sstart&quot;,&quot;send&quot;,
                 &quot;Evalue&quot;,&quot;score&quot;))
 
-matches.hyl &lt;- read_delim(
-  &quot;../4_blast/2_blast/16_2_aHylSar.txt&quot;,
+matches.gar &lt;- read_delim(
+  &quot;../4_blast/2_blast/16_2_BufGar.txt&quot;,
   delim = &quot;\t&quot;,
   col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
                 &quot;Perc&quot;,&quot;Length&quot;,
@@ -535,8 +535,28 @@ matches.hyl &lt;- read_delim(
                 &quot;sstart&quot;,&quot;send&quot;,
                 &quot;Evalue&quot;,&quot;score&quot;))
 
-my.matches &lt;- list(matches.buf,matches.den2, matches.hyl)
-names(my.matches) &lt;- c(&quot;Bufo&quot;,&quot;Dendropsophus&quot;,&quot;Hyla&quot;)</code></pre>
+matches.pla &lt;- read_delim(
+  &quot;../4_blast/2_blast/16_2_PlaOrn.txt&quot;,
+  delim = &quot;\t&quot;,
+  col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
+                &quot;Perc&quot;,&quot;Length&quot;,
+                &quot;Diff&quot;,&quot;Gaps&quot;,
+                &quot;qStart&quot;,&quot;qEnd&quot;,
+                &quot;sstart&quot;,&quot;send&quot;,
+                &quot;Evalue&quot;,&quot;score&quot;))
+
+matches.rhi &lt;- read_delim(
+  &quot;../4_blast/2_blast/16_2_RhiMar.txt&quot;,
+  delim = &quot;\t&quot;,
+  col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
+                &quot;Perc&quot;,&quot;Length&quot;,
+                &quot;Diff&quot;,&quot;Gaps&quot;,
+                &quot;qStart&quot;,&quot;qEnd&quot;,
+                &quot;sstart&quot;,&quot;send&quot;,
+                &quot;Evalue&quot;,&quot;score&quot;))
+
+my.matches &lt;- list(matches.buf, matches.lep, matches.gar, matches.rhi, matches.pla)
+names(my.matches) &lt;- c(&quot;Bufo&quot;,&quot;Leptodactylus&quot;,&quot;Gargarizans&quot;, &quot;Rhinella&quot;, &quot;Platyplectrum&quot;)</code></pre>
 <p>Now there are a few things we need to do:</p>
 <ul>
 <li>Retain only matches where 2nd match, if present, is 5 orders of magnitude smaller</li>
@@ -568,48 +588,161 @@ names(my.matches) &lt;- c(&quot;Bufo&quot;,&quot;Dendropsophus&quot;,&quot;Hyla&
 ## 10    4557 1.21e-18 1.21e-18
 ## # … with 77 more rows
 ## 
-## $Dendropsophus
-## # A tibble: 37 × 3
+## $Leptodactylus
+## # A tibble: 39 × 3
 ##    queryID   firstE    scndE
 ##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-##  1     438 5.43e-19 5.43e-19
-##  2    1637 1.95e-18 1.95e-18
-##  3    5500 9.51e-17 3.42e-16
-##  4   12076 4.2 e-20 1.95e-18
-##  5   13518 3.25e-21 3.25e-21
-##  6   14278 5.43e-19 5.43e-19
-##  7   15540 6.93e-28 6.93e-28
-##  8   16759 1.95e-18 1.95e-18
-##  9   20742 4.2 e-20 1.51e-19
-## 10   23288 9.3 e-17 9.3 e-17
-## # … with 27 more rows
+##  1     438 2.2 e-23 2.2 e-23
+##  2     556 1.71e-19 1.71e-19
+##  3    1637 1.02e-21 1.32e-20
+##  4    3993 4.76e-20 6.16e-19
+##  5    5500 4.98e-20 1.79e-19
+##  6   10288 2.86e-17 3.7 e-16
+##  7   14278 1.32e-20 6.16e-19
+##  8   15540 6.11e-24 6.11e-24
+##  9   22154 1.71e-19 2.21e-18
+## 10   22582 6.16e-19 2.21e-18
+## # … with 29 more rows
 ## 
-## $Hyla
-## # A tibble: 44 × 3
+## $Gargarizans
+## # A tibble: 82 × 3
 ##    queryID   firstE    scndE
 ##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-##  1     438 3.54e-23 1.27e-22
-##  2     638 3.52e-28 7.62e-25
-##  3    1637 1.65e-21 7.67e-20
-##  4    7561 4.66e-27 4.66e-27
-##  5    9229 4.62e-17 1.66e-16
-##  6   12638 2.13e-20 2.13e-20
-##  7   13518 9.85e-24 1.27e-22
-##  8   15540 1.27e-27 1.27e-27
-##  9   19075 2.12e-25 2.12e-25
-## 10   20742 1.65e-21 9.92e-19
-## # … with 34 more rows</code></pre>
-<p>All queries with more than 1 match have an e-value difference between the 1st and 2nd hit below 4 orders of magnitude. Thus, we will remove all hits with more than 1 match.</p>
-<pre class="r"><code>my.matches &lt;- lapply(my.matches, function(x){
-  to.remove &lt;- x %&gt;%
+##  1     438 1.81e-21 1.81e-21
+##  2     556 6.51e-21 3.92e-18
+##  3     638 6.51e-21 6.51e-21
+##  4    1052 6.51e-21 8.42e-20
+##  5    1347 1.87e-16 1.87e-16
+##  6    1637 1.81e-21 1.81e-21
+##  7    2060 3.92e-18 3.92e-18
+##  8    3837 3.03e-19 3.03e-19
+##  9    3993 3.92e-18 6.55e-16
+## 10    6728 5.15e-22 5.15e-22
+## # … with 72 more rows
+## 
+## $Rhinella
+## # A tibble: 63 × 3
+##    queryID   firstE    scndE
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+##  1     302 2.25e-18 1.05e-16
+##  2     438 2.23e-23 8.04e-23
+##  3     556 1.74e-19 1.74e-19
+##  4    1637 2.23e-23 8.04e-23
+##  5    3837 1.74e-19 6.26e-19
+##  6    4557 3.74e-21 3.74e-21
+##  7    5500 2.35e-18 2.35e-18
+##  8    6371 3.77e-16 3.77e-16
+##  9    7017 6.26e-19 1.05e-16
+## 10    7627 2.22e-28 1.74e-19
+## # … with 53 more rows
+## 
+## $Platyplectrum
+## # A tibble: 35 × 3
+##    queryID   firstE    scndE
+##      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+##  1     638 2.06e-20 9.58e-19
+##  2    1052 7.41e-20 7.41e-20
+##  3    7561 9.73e-24 1.26e-22
+##  4    8236 4.46e-17 5.77e-16
+##  5   13518 1.59e-21 7.41e-20
+##  6   13763 5.77e-16 5.77e-16
+##  7   15540 2.65e-24 2.65e-24
+##  8   19075 1.22e-27 5.69e-26
+##  9   20287 5.86e-21 7.58e-20
+## 10   24462 9.8 e-19 9.8 e-19
+## # … with 25 more rows</code></pre>
+<p>This part is a bit hard to assess visually within R, and to be brutally honest I tried writing a script ot retain the first hit only if the second is less than 5 order of magnitude, but I failed. So i opened the file in excel and went through them and identified matches that meet that condition.</p>
+<pre class="r"><code>keep.buf &lt;- c(6371,9229,13763,18474,28399,30236,37034,81008,185510,205046)
+keep.gar &lt;- c(2060,6728,28399,34600,39637,78783,125009,160312)
+keep.rhi &lt;- c(7627)
+keep.lep &lt;- c(158095,176112,208728,219746)
+#keep.pla &lt;- c() no match matched these conditions for platyplectrum</code></pre>
+<p>Now we will retain those, and remove all other multiple matches</p>
+<pre class="r"><code>#extract matches to keep, then retain only top hit
+keep.buf &lt;- my.matches$Bufo %&gt;%
+  filter(queryID %in% keep.buf) %&gt;%
+  group_by(queryID) %&gt;%
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE) %&gt;% ungroup()
+
+#extract list of queryIDs to remove (those with multiple matches)
+drop.buf &lt;- my.matches$Bufo %&gt;%
   group_by(queryID) %&gt;% tally() %&gt;%
   filter(n&gt;1) %&gt;% pull(queryID)
-  
-  y &lt;- x %&gt;%
-  filter(!queryID %in% to.remove)
-  
-  return(y)
-})</code></pre>
+
+#drop if query ID in list
+dropped.buf &lt;- my.matches$Bufo %&gt;%
+  filter(!queryID %in% drop.buf)
+
+#merge the two
+my.buf &lt;- rbind(keep.buf,dropped.buf)
+
+#replace in original list
+my.matches$Bufo &lt;- my.buf
+
+#remove clutter
+rm(my.buf,dropped.buf,drop.buf,keep.buf)</code></pre>
+<pre class="r"><code>keep.gar &lt;- my.matches$Gargarizans %&gt;%
+  filter(queryID %in% keep.gar) %&gt;%
+  group_by(queryID) %&gt;%
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE) %&gt;% ungroup()
+
+drop.gar &lt;- my.matches$Gargarizans %&gt;%
+  group_by(queryID) %&gt;% tally() %&gt;%
+  filter(n&gt;1) %&gt;% pull(queryID)
+
+dropped.gar &lt;- my.matches$Gargarizans %&gt;%
+  filter(!queryID %in% drop.gar)
+
+my.gar &lt;- rbind(keep.gar,dropped.gar)
+
+my.matches$Gargarizans &lt;- my.gar
+
+rm(my.gar,dropped.gar,drop.gar,keep.gar)</code></pre>
+<pre class="r"><code>keep.lep &lt;- my.matches$Leptodactylus %&gt;%
+  filter(queryID %in% keep.lep) %&gt;%
+  group_by(queryID) %&gt;%
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE) %&gt;% ungroup()
+
+drop.lep &lt;- my.matches$Leptodactylus %&gt;%
+  group_by(queryID) %&gt;% tally() %&gt;%
+  filter(n&gt;1) %&gt;% pull(queryID)
+
+dropped.lep &lt;- my.matches$Leptodactylus %&gt;%
+  filter(!queryID %in% drop.lep)
+
+my.lep &lt;- rbind(keep.lep,dropped.lep)
+
+my.matches$Leptodactylus &lt;- my.lep
+
+rm(my.lep,dropped.lep,drop.lep,keep.lep)</code></pre>
+<pre class="r"><code>keep.rhi &lt;- my.matches$Rhinella %&gt;%
+  filter(queryID %in% keep.rhi) %&gt;%
+  group_by(queryID) %&gt;%
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE) %&gt;% ungroup()
+
+drop.rhi &lt;- my.matches$Rhinella %&gt;%
+  group_by(queryID) %&gt;% tally() %&gt;%
+  filter(n&gt;1) %&gt;% pull(queryID)
+
+dropped.rhi &lt;- my.matches$Rhinella %&gt;%
+  filter(!queryID %in% drop.rhi)
+
+my.rhi &lt;- rbind(keep.rhi,dropped.rhi)
+
+my.matches$Rhinella &lt;- my.rhi
+
+rm(my.rhi,dropped.rhi,drop.rhi,keep.rhi)</code></pre>
+<p>For Platyplectrum we simply remove all those with more than 1 match</p>
+<pre class="r"><code>drop.pla &lt;- my.matches$Platyplectrum %&gt;%
+  group_by(queryID) %&gt;% tally() %&gt;%
+  filter(n&gt;1) %&gt;% pull(queryID)
+
+dropped.pla &lt;- my.matches$Platyplectrum %&gt;%
+  filter(!queryID %in% drop.pla)
+
+my.matches$Platyplectrum &lt;- dropped.pla
+
+rm(dropped.pla,drop.pla)</code></pre>
 <p>Now let’s import the linkage map data to see which one of these occur on the linkage map as well. We will retain only one entry per locus</p>
 <pre class="r"><code>my.map &lt;- read_csv(file = &quot;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&quot;) %&gt;%
   select(Locus,LG_locus,mean_Ave) %&gt;% unique()</code></pre>
@@ -625,99 +758,142 @@ names(my.matches) &lt;- c(&quot;Bufo&quot;,&quot;Dendropsophus&quot;,&quot;Hyla&
 })</code></pre>
 <p>And plot as pivot tables</p>
 <pre class="r"><code>qpvt(my.matches.lm$Bufo, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
-<pre><code>##           1  2  3  4  5  6  7  9  10  11  12  Total  
-## SUPER_1         3                      1   1      5  
-## SUPER_10              1                           1  
-## SUPER_2   1           1  1  1                     4  
-## SUPER_3   6                                       6  
-## SUPER_4      3              1                     4  
-## SUPER_5            5                              5  
-## SUPER_6   1        1                   3          5  
-## SUPER_7                            3              3  
-## SUPER_8                     1  3                  4  
-## SUPER_9   1        1  2                           4  
-## Total     9  3  3  7  4  1  3  3   3   4   1     41</code></pre>
-<pre class="r"><code>qpvt(my.matches.lm$Dendropsophus, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
-<pre><code>##           1  2  3  4  5  6  7  8  9  10  11  12  13  Total  
-## SUPER_1         8                                        8  
-## SUPER_10              1           2                      3  
-## SUPER_11  4                                              4  
-## SUPER_12                                      3          3  
-## SUPER_13                                          1      1  
-## SUPER_14                                  3              3  
-## SUPER_15     2                                           2  
-## SUPER_2            3                          1          4  
-## SUPER_3                  2                               2  
-## SUPER_4               3  1                               4  
-## SUPER_5   1                                              1  
-## SUPER_6      2                                           2  
-## SUPER_7   1                 1                            2  
-## SUPER_8               1        1                         2  
-## SUPER_9      1                        1                  2  
-## Total     6  5  8  3  5  3  1  1  2   1   3   4   1     43</code></pre>
-<pre class="r"><code>qpvt(my.matches.lm$Hyla, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
-<pre><code>##               1  2  3  4  5  6  7  8  9  10  11  Total  
-## scaffold_331           1                             1  
-## SUPER_1       1              4  2                    7  
-## SUPER_11                  1                          1  
-## SUPER_12                                      4      4  
-## SUPER_2       5  2                                   7  
-## SUPER_3          5                            1      6  
-## SUPER_4             3                                3  
-## SUPER_5          1     3                             4  
-## SUPER_6                   1                   1      2  
-## SUPER_7          1        1        3                 5  
-## SUPER_8       1                           1          2  
-## SUPER_9                               3              3  
-## Total         7  9  3  4  3  4  2  3  3   1   6     45</code></pre>
-<p>We also want to check on what scaffolds the sex markers we detected fall, even if they were not placed on our linkage maps</p>
-<pre class="r"><code>my.sex &lt;- read_csv(file = &quot;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&quot;) %&gt;%
-  select(Locus,SexDet,GWAS.associated) %&gt;%
-  filter(SexDet == &quot;XY&quot; | GWAS.associated == &quot;significant&quot;) %&gt;%
-  unique() %&gt;%
-  mutate(sex=case_when(SexDet == &quot;XY&quot; &amp; GWAS.associated == &quot;significant&quot; ~ &quot;both&quot;,
-                       SexDet == &quot;XY&quot; &amp; GWAS.associated == &quot;non.significant&quot; ~ &quot;linked&quot;,
-                       is.na(SexDet) == TRUE &amp; GWAS.associated == &quot;significant&quot; ~ &quot;associated&quot;))</code></pre>
-<pre><code>## 
-## ── Column specification ────────────────────────────────────────────────────────
-## cols(
-##   .default = col_double(),
-##   markerID = col_character(),
-##   fasta = col_character(),
-##   Segregation = col_character(),
-##   tag = col_character(),
-##   SexDet = col_character(),
-##   Method1 = col_logical(),
-##   Method2 = col_character(),
-##   Method5 = col_character(),
-##   GWAS.associated = col_character()
-## )
-## ℹ Use `spec()` for the full column specifications.</code></pre>
-<pre><code>## Warning: 5 parsing failures.
-##  row     col           expected  actual                                             file
-## 2610 Method1 1/0/T/F/TRUE/FALSE Method1 &#39;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&#39;
-## 4476 Method1 1/0/T/F/TRUE/FALSE Method1 &#39;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&#39;
-## 5060 Method1 1/0/T/F/TRUE/FALSE Method1 &#39;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&#39;
-## 7448 Method1 1/0/T/F/TRUE/FALSE Method1 &#39;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&#39;
-## 8449 Method1 1/0/T/F/TRUE/FALSE Method1 &#39;../3_SexLinked/15_5_SummaryTable_MapAndSex.csv&#39;</code></pre>
-<pre class="r"><code>my.matches.sex &lt;- lapply(my.matches, function(x){
-  y &lt;-  left_join(my.sex,
-                  x,
-                  by=c(&quot;Locus&quot;=&quot;queryID&quot;)) %&gt;% filter(is.na(searchID)==FALSE)
-  
-  return(y)
-})
-
-lapply(my.matches.sex, nrow)</code></pre>
-<pre><code>## $Bufo
-## [1] 0
-## 
-## $Dendropsophus
-## [1] 0
-## 
-## $Hyla
-## [1] 0</code></pre>
-<p>Unfortunately none of the sex markers we identified matched any region on the the three genomes we blasted to.</p>
+<pre><code>##           1   2  3  4  5  6  7  9  10  11  12  Total  
+## SUPER_1    1     3                      1   1      6  
+## SUPER_10               1                           1  
+## SUPER_2    1           1  1  1                     4  
+## SUPER_3    6              2                        8  
+## SUPER_4       3              1                     4  
+## SUPER_5             5                              5  
+## SUPER_6    1  1     1                   3          6  
+## SUPER_7                             3              3  
+## SUPER_8                      1  3                  4  
+## SUPER_9    1        1  2                           4  
+## Total     10  4  3  7  4  3  3  3   3   4   1     45</code></pre>
+<pre class="r"><code>qpvt(my.matches.lm$Gargarizans, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
+<pre><code>##                    1  2  3  4  5  6  7  9  10  11  Total  
+## CM026465.1         1        1     2  1                 5  
+## CM026466.1         1     5                             6  
+## CM026467.1         4                                   4  
+## CM026468.1            4  1                             5  
+## CM026469.1         1        2     1  1                 5  
+## CM026470.1         1  1                         3      5  
+## CM026471.1                     2                       2  
+## CM026472.1                  1               2          3  
+## CM026473.1                     1     1  3              5  
+## CM026474.1                     1                1      2  
+## CM026475.1                                  1   1      2  
+## JABFFT010000341.1           1                          1  
+## Total              8  5  6  5  4  3  3  3   3   5     45</code></pre>
+<pre class="r"><code>qpvt(my.matches.lm$Leptodactylus, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
+<pre><code>##                                        1  2  3  4  5  6  7  8  9  10  11  12  Total  
+## ENA|CAMRHE010000001|CAMRHE010000001.1        1                                    1  
+## ENA|CAMRHE010000004|CAMRHE010000004.1                                  1          1  
+## ENA|CAMRHE010000006|CAMRHE010000006.1     1                                       1  
+## ENA|CAMRHE010000017|CAMRHE010000017.1              1                              1  
+## ENA|CAMRHE010000020|CAMRHE010000020.1           1                                 1  
+## ENA|CAMRHE010000021|CAMRHE010000021.1                 1                           1  
+## ENA|CAMRHE010000028|CAMRHE010000028.1                              1              1  
+## ENA|CAMRHE010000029|CAMRHE010000029.1  1                                          1  
+## ENA|CAMRHE010000034|CAMRHE010000034.1  1                                          1  
+## ENA|CAMRHE010000036|CAMRHE010000036.1        1                                    1  
+## ENA|CAMRHE010000040|CAMRHE010000040.1           1                                 1  
+## ENA|CAMRHE010000043|CAMRHE010000043.1                                  1          1  
+## ENA|CAMRHE010000051|CAMRHE010000051.1           1                                 1  
+## ENA|CAMRHE010000062|CAMRHE010000062.1                 1                           1  
+## ENA|CAMRHE010000070|CAMRHE010000070.1                              1              1  
+## ENA|CAMRHE010000071|CAMRHE010000071.1                 1                           1  
+## ENA|CAMRHE010000081|CAMRHE010000081.1        1                                    1  
+## ENA|CAMRHE010000082|CAMRHE010000082.1           1                                 1  
+## ENA|CAMRHE010000092|CAMRHE010000092.1     1                                       1  
+## ENA|CAMRHE010000102|CAMRHE010000102.1  1                                          1  
+## ENA|CAMRHE010000105|CAMRHE010000105.1           1                                 1  
+## ENA|CAMRHE010000106|CAMRHE010000106.1                              1              1  
+## ENA|CAMRHE010000109|CAMRHE010000109.1                                  1          1  
+## ENA|CAMRHE010000112|CAMRHE010000112.1  1                                          1  
+## ENA|CAMRHE010000133|CAMRHE010000133.1                    1                        1  
+## ENA|CAMRHE010000137|CAMRHE010000137.1        1                                    1  
+## ENA|CAMRHE010000142|CAMRHE010000142.1              1                              1  
+## ENA|CAMRHE010000155|CAMRHE010000155.1              1                              1  
+## ENA|CAMRHE010000195|CAMRHE010000195.1     1                                       1  
+## ENA|CAMRHE010000209|CAMRHE010000209.1     1                                       1  
+## ENA|CAMRHE010000266|CAMRHE010000266.1                                      2      2  
+## ENA|CAMRHE010000302|CAMRHE010000302.1                                  1          1  
+## ENA|CAMRHE010000323|CAMRHE010000323.1           1                                 1  
+## ENA|CAMRHE010000341|CAMRHE010000341.1        1                                    1  
+## ENA|CAMRHE010000361|CAMRHE010000361.1                       1                     1  
+## ENA|CAMRHE010000381|CAMRHE010000381.1  1                                          1  
+## ENA|CAMRHE010000392|CAMRHE010000392.1        1                                    1  
+## ENA|CAMRHE010000448|CAMRHE010000448.1  1                                          1  
+## ENA|CAMRHE010000456|CAMRHE010000456.1                       1                     1  
+## ENA|CAMRHE010000459|CAMRHE010000459.1        1                                    1  
+## ENA|CAMRHE010000473|CAMRHE010000473.1     1                                       1  
+## ENA|CAMRHE010000518|CAMRHE010000518.1  1                                          1  
+## ENA|CAMRHE010000580|CAMRHE010000580.1        1                                    1  
+## ENA|CAMRHE010000591|CAMRHE010000591.1                          1                  1  
+## ENA|CAMRHE010000648|CAMRHE010000648.1                                  1          1  
+## ENA|CAMRHE010000692|CAMRHE010000692.1        1                                    1  
+## ENA|CAMRHE010000733|CAMRHE010000733.1  1                                          1  
+## ENA|CAMRHE010000802|CAMRHE010000802.1     1                                       1  
+## ENA|CAMRHE010000835|CAMRHE010000835.1           1                                 1  
+## ENA|CAMRHE010000844|CAMRHE010000844.1                    1                        1  
+## ENA|CAMRHE010001411|CAMRHE010001411.1  1                                          1  
+## Total                                  9  6  9  7  3  3  2  2  1   3   5   2     52</code></pre>
+<pre class="r"><code>qpvt(my.matches.lm$Rhinella, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
+<pre><code>##                 1  2  3  4  5  6  7  9  10  11  12  Total  
+## ONZH01002185.1     1                                    1  
+## ONZH01002998.1           1                              1  
+## ONZH01004089.1              1                           1  
+## ONZH01004433.1                           1              1  
+## ONZH01004595.1           1                              1  
+## ONZH01005235.1           1                              1  
+## ONZH01007232.1                    1                     1  
+## ONZH01008736.1  1                                       1  
+## ONZH01009117.1                    1                     1  
+## ONZH01009633.1                    1                     1  
+## ONZH01010448.1        1                                 1  
+## ONZH01010689.1  1                                       1  
+## ONZH01010706.1                    1                     1  
+## ONZH01011743.1     1                                    1  
+## ONZH01011827.1  1                                       1  
+## ONZH01012283.1              1                           1  
+## ONZH01012983.1     1                                    1  
+## ONZH01013238.1                                   1      1  
+## ONZH01013881.1           1                              1  
+## ONZH01014197.1        1                                 1  
+## ONZH01014232.1  1                                       1  
+## ONZH01014800.1     1                                    1  
+## ONZH01014979.1        1                                 1  
+## ONZH01015224.1        1                                 1  
+## ONZH01015597.1                               1          1  
+## ONZH01015972.1                           1              1  
+## ONZH01017199.1  1                                       1  
+## ONZH01017616.1                               1          1  
+## ONZH01018404.1                           1              1  
+## ONZH01018720.1                 1                        1  
+## ONZH01020851.1              1                           1  
+## ONZH01021045.1                           1              1  
+## ONZH01022040.1     1                                    1  
+## ONZH01022772.1                       1                  1  
+## ONZH01023712.1     1                                    1  
+## ONZH01023775.1        1                                 1  
+## ONZH01024890.1                               1          1  
+## ONZH01027000.1     1                                    1  
+## ONZH01028366.1                 1                        1  
+## ONZH01028847.1                               1          1  
+## ONZH01029597.1           1                              1  
+## ONZH01029888.1     1                                    1  
+## ONZH01030037.1                       1                  1  
+## Total           5  8  5  5  3  2  4  2   4   4   1     43</code></pre>
+<pre class="r"><code>qpvt(my.matches.lm$Platyplectrum, &quot;searchID&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
+<pre><code>##                    2  3  6  8  11  Total  
+## JABWIB010009571.1        1             1  
+## JABWIB010013348.1  1                   1  
+## JABWIB010017146.1     1                1  
+## JABWIB010017960.1           1          1  
+## JABWIB010021123.1               1      1  
+## JABWIB010065037.1  1                   1  
+## Total              2  1  1  1   1      6</code></pre>
 <p>Now we create a new sstart and send column where sstart is always &lt; than send, and add</p>
 <pre class="r"><code>my.matches.lm &lt;- lapply(my.matches.lm, function(x){
   y &lt;- x %&gt;% mutate(sstart2 = case_when(sstart &lt; send ~ sstart,
@@ -739,41 +915,61 @@ lapply(my.matches.sex, nrow)</code></pre>
 <p>Now let’s export those in bed format (i.e., <code>scaffoldID&lt;tab&gt;startPos&lt;tab&gt;endPos</code>)</p>
 <pre class="r"><code>write_delim(my.matches.lm$Bufo %&gt;%
               select(searchID,sstart3,send3),
-            file = &quot;../4_blast/2_blast/16_3_aBufBuf_matches.bam&quot;,
+            file = &quot;../4_blast/2_blast/16_3_BufBuf_matches.bam&quot;,
             delim = &quot;\t&quot;,
             col_names = FALSE)
 
-write_delim(my.matches.lm$Dendropsophus %&gt;%
+write_delim(my.matches.lm$Leptodactylus %&gt;%
               select(searchID,sstart3,send3),
-            file = &quot;../4_blast/2_blast/16_3_aDenEbr2_matches.bam&quot;,
+            file = &quot;../4_blast/2_blast/16_3_LepFal_matches.bam&quot;,
             delim = &quot;\t&quot;,
             col_names = FALSE)
 
-write_delim(my.matches.lm$Hyla %&gt;%
+write_delim(my.matches.lm$Gargarizans %&gt;%
               select(searchID,sstart3,send3),
-            file = &quot;../4_blast/2_blast/16_3_aHylSar_matches.bam&quot;,
+            file = &quot;../4_blast/2_blast/16_3_BufGar_matches.bam&quot;,
+            delim = &quot;\t&quot;,
+            col_names = FALSE)
+
+write_delim(my.matches.lm$Rhinella %&gt;%
+              select(searchID,sstart3,send3),
+            file = &quot;../4_blast/2_blast/16_3_RhiMar_matches.bam&quot;,
+            delim = &quot;\t&quot;,
+            col_names = FALSE)
+
+write_delim(my.matches.lm$Platyplectrum %&gt;%
+              select(searchID,sstart3,send3),
+            file = &quot;../4_blast/2_blast/16_3_PlaOrn_matches.bam&quot;,
             delim = &quot;\t&quot;,
             col_names = FALSE)</code></pre>
 <p>And as tables for later use</p>
 <pre class="r"><code>write_delim(my.matches.lm$Bufo,
-            file = &quot;../4_blast/2_blast/16_3_aBufBuf_matches.txt&quot;,
+            file = &quot;../4_blast/2_blast/16_3_BufBuf_matches.txt&quot;,
             delim = &quot;\t&quot;)
 
-write_delim(my.matches.lm$Dendropsophus,
-            file = &quot;../4_blast/2_blast/16_3_aDenEbr2_matches.txt&quot;,
+write_delim(my.matches.lm$Leptodactylus,
+            file = &quot;../4_blast/2_blast/16_3_LepFal_matches.txt&quot;,
             delim = &quot;\t&quot;)
 
-write_delim(my.matches.lm$Hyla,
-            file = &quot;../4_blast/2_blast/16_3_aHylSar_matches.txt&quot;,
+write_delim(my.matches.lm$Gargarizans,
+            file = &quot;../4_blast/2_blast/16_3_BufGar_matches.txt&quot;,
+            delim = &quot;\t&quot;)
+
+write_delim(my.matches.lm$Rhinella,
+            file = &quot;../4_blast/2_blast/16_3_RhiMar_matches.txt&quot;,
+            delim = &quot;\t&quot;)
+
+write_delim(my.matches.lm$Platyplectrum,
+            file = &quot;../4_blast/2_blast/16_3_PlaOrn_matches.txt&quot;,
             delim = &quot;\t&quot;)</code></pre>
 </div>
 </div>
 <div id="extract-4kb-windows-from-reference-assemblies" class="section level2">
 <h2>3. Extract 4kb windows from reference assemblies</h2>
-<p>Now let’s extract the corresponding fasta sequences with the following command</p>
-<pre class="bash"><code>module load singularity
+<p>Now let’s extract the corresponding fasta sequences with the following command. Note, you’ll have to replace assembly.fa and matches.fa with the names of the respective matches and assembly files.</p>
+<pre class="bash"><code>module load bedtools
 
-singularity run /sw/containers/bedtools-2.30.0.sif bedtools getfasta -fi assembly.fa -bed matches.bam -fo matches.fa</code></pre>
+bedtools getfasta -fi assembly.fa -bed matches.bam -fo matches.fa</code></pre>
 </div>
 <div id="blast-extracted-regions-to-x.-tropicalis-reference-genome" class="section level2">
 <h2>4. Blast extracted regions to X. tropicalis reference genome</h2>
@@ -783,12 +979,12 @@ singularity run /sw/containers/bedtools-2.30.0.sif bedtools getfasta -fi assembl
 <pre class="bash"><code>conda activate blast-2.11.0</code></pre>
 <pre class="bash"><code>makeblastdb -in GCA_000004195.4_UCB_Xtro_10.0_genomic.fna -title Xtro10 -dbtype nucl -out Xtro10 -parse_seqids</code></pre>
 <p>And finally query the 4kb windows I extracted from the hourglass tree frog genome onto the Xenopus genome.</p>
-<pre class="bash"><code>for assembly in aBufBuf aHylSar aDenEbr2
+<pre class="bash"><code>for assembly in BufBuf BufGar LepFal PlaOrn RhiMar
 do
-  blastn -query 2_blast/2_2_matches/16_4_${assembly}_matches.fa -db 3_blast_XenLaevis/3_1_xtrop/Xtro10 -out 3_blast_XenLaevis/16_5_${assembly}2XenTrop.txt -evalue 1e-15 -outfmt 6 -max_target_seqs 5
+  blastn -query 2_blast/2_2_matches/16_4_${assembly}_matches.fa -db 3_blast_XenLaevis/3_1_xtrop/Xtro10 -out 3_blast_XenLaevis/16_5_${assembly}2XenTrop.txt -evalue 1e-15 -outfmt 6
 done</code></pre>
-<p>Now, before we merge the matches between Dendropsophus and Xenopus, let’s retain only the best match if the difference is 5 orders of magnitude</p>
-<pre class="r"><code>Buf2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_aBufBuf2XenTrop.txt&quot;,
+<p>Now, before we merge the matches between the intermediate genomes and Xenopus, let’s retain only the best match if the difference is 5 orders of magnitude</p>
+<pre class="r"><code>Buf2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_BufBuf2XenTrop.txt&quot;,
                           delim = &quot;\t&quot;,
                           col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
                                         &quot;Perc&quot;,&quot;Length&quot;,
@@ -797,7 +993,7 @@ done</code></pre>
                                         &quot;sstart&quot;,&quot;send&quot;,
                                         &quot;Evalue&quot;,&quot;score&quot;))
 
-Den2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_aDenEbr22XenTrop.txt&quot;,
+Gar2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_BufGar2XenTrop.txt&quot;,
                           delim = &quot;\t&quot;,
                           col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
                                         &quot;Perc&quot;,&quot;Length&quot;,
@@ -806,7 +1002,7 @@ Den2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_aDenEbr22XenTrop.txt&quot
                                         &quot;sstart&quot;,&quot;send&quot;,
                                         &quot;Evalue&quot;,&quot;score&quot;))
 
-Hyl2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_aHylSar2XenTrop.txt&quot;,
+Lep2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_LepFal2XenTrop.txt&quot;,
                           delim = &quot;\t&quot;,
                           col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
                                         &quot;Perc&quot;,&quot;Length&quot;,
@@ -815,9 +1011,29 @@ Hyl2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_aHylSar2XenTrop.txt&quot;
                                         &quot;sstart&quot;,&quot;send&quot;,
                                         &quot;Evalue&quot;,&quot;score&quot;))
 
-my.xen.list &lt;- list(Buf2Xen, Den2Xen, Hyl2Xen)
-names(my.xen.list) &lt;- c(&quot;Bufo&quot;,&quot;Dendropsophus&quot;,&quot;Hyla&quot;)
-rm(Buf2Xen,Den2Xen,Hyl2Xen)</code></pre>
+Pla2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_PlaOrn2XenTrop.txt&quot;,
+                          delim = &quot;\t&quot;,
+                          col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
+                                        &quot;Perc&quot;,&quot;Length&quot;,
+                                        &quot;Diff&quot;,&quot;Gaps&quot;,
+                                        &quot;qStart&quot;,&quot;qEnd&quot;,
+                                        &quot;sstart&quot;,&quot;send&quot;,
+                                        &quot;Evalue&quot;,&quot;score&quot;))
+
+Rhi2Xen &lt;- read_delim(&quot;../4_blast/2_blast/16_5_RhiMar2XenTrop.txt&quot;,
+                          delim = &quot;\t&quot;,
+                          col_names = c(&quot;queryID&quot;,&quot;searchID&quot;,
+                                        &quot;Perc&quot;,&quot;Length&quot;,
+                                        &quot;Diff&quot;,&quot;Gaps&quot;,
+                                        &quot;qStart&quot;,&quot;qEnd&quot;,
+                                        &quot;sstart&quot;,&quot;send&quot;,
+                                        &quot;Evalue&quot;,&quot;score&quot;))
+
+
+
+my.xen.list &lt;- list(Buf2Xen, Gar2Xen, Lep2Xen, Pla2Xen, Rhi2Xen)
+names(my.xen.list) &lt;- c(&quot;Bufo&quot;,&quot;Gargarizans&quot;,&quot;Leptodactylus&quot;,&quot;Platyplectrum&quot;,&quot;Rhinella&quot;)
+rm(Buf2Xen,Gar2Xen,Lep2Xen,Pla2Xen,Rhi2Xen)</code></pre>
 <pre class="r"><code>lapply(my.xen.list, function(x){
   x %&gt;% group_by(queryID) %&gt;%
     summarise(firstE = min(Evalue),
@@ -825,7 +1041,7 @@ rm(Buf2Xen,Den2Xen,Hyl2Xen)</code></pre>
     drop_na()
 })</code></pre>
 <pre><code>## $Bufo
-## # A tibble: 7 × 3
+## # A tibble: 8 × 3
 ##   queryID                       firstE     scndE
 ##   &lt;chr&gt;                          &lt;dbl&gt;     &lt;dbl&gt;
 ## 1 SUPER_1:709086661-709090729 0        0        
@@ -833,135 +1049,132 @@ rm(Buf2Xen,Den2Xen,Hyl2Xen)</code></pre>
 ## 3 SUPER_2:645951670-645955731 0        0        
 ## 4 SUPER_3:147300479-147304544 3.11e-67 4.02e- 66
 ## 5 SUPER_3:366739305-366743374 0        1.63e-164
-## 6 SUPER_4:536096509-536100577 0        7.03e- 34
-## 7 SUPER_5:378670322-378674388 0        0        
+## 6 SUPER_3:41116371-41120437   0        0        
+## 7 SUPER_4:536096509-536100577 0        7.03e- 34
+## 8 SUPER_5:378670322-378674388 0        0        
 ## 
-## $Dendropsophus
-## # A tibble: 3 × 3
-##   queryID                        firstE    scndE
-##   &lt;chr&gt;                           &lt;dbl&gt;    &lt;dbl&gt;
-## 1 SUPER_2:96286111-96290177   0         5.17e-70
-## 2 SUPER_4:116815721-116819789 6.02e-144 9.22e-23
-## 3 SUPER_8:26099098-26103162   2.39e- 73 4.17e-41
+## $Gargarizans
+## # A tibble: 6 × 3
+##   queryID                          firstE    scndE
+##   &lt;chr&gt;                             &lt;dbl&gt;    &lt;dbl&gt;
+## 1 CM026465.1:186712537-186716598 0        0       
+## 2 CM026465.1:316786201-316790247 0        0       
+## 3 CM026467.1:518606935-518611000 6.41e-99 1.39e-95
+## 4 CM026468.1:462842942-462847010 0        1.41e-85
+## 5 CM026470.1:387945366-387949426 0        0       
+## 6 CM026473.1:186541833-186545901 0        0       
 ## 
-## $Hyla
-## # A tibble: 7 × 3
-##   queryID                        firstE     scndE
-##   &lt;chr&gt;                           &lt;dbl&gt;     &lt;dbl&gt;
-## 1 SUPER_1:105675694-105679756 1.98e- 24 2.58e- 18
-## 2 SUPER_1:320167801-320171868 0         0        
-## 3 SUPER_2:335562692-335566750 2.58e- 18 2.58e- 18
-## 4 SUPER_5:261447606-261451672 1.53e- 25 2.56e- 23
-## 5 SUPER_7:56221510-56225578   2.56e- 23 2.56e- 23
-## 6 SUPER_8:79753602-79757668   0         0        
-## 7 SUPER_9:88464314-88468382   4.75e-130 8.01e-123</code></pre>
-<pre class="r"><code>lapply(my.xen.list, function(x){
-  x %&gt;% select(queryID)
-})</code></pre>
-<pre><code>## $Bufo
-## # A tibble: 2,406 × 1
-##    queryID                    
-##    &lt;chr&gt;                      
-##  1 SUPER_7:29775233-29779298  
-##  2 SUPER_3:147300479-147304544
-##  3 SUPER_3:147300479-147304544
-##  4 SUPER_3:147300479-147304544
-##  5 SUPER_3:147300479-147304544
-##  6 SUPER_3:147300479-147304544
-##  7 SUPER_3:147300479-147304544
-##  8 SUPER_3:147300479-147304544
-##  9 SUPER_3:147300479-147304544
-## 10 SUPER_3:147300479-147304544
-## # … with 2,396 more rows
+## $Leptodactylus
+## # A tibble: 8 × 3
+##   queryID                                                   firstE     scndE
+##   &lt;chr&gt;                                                      &lt;dbl&gt;     &lt;dbl&gt;
+## 1 ENA|CAMRHE010000021|CAMRHE010000021.1:10133088-10137157 0        0        
+## 2 ENA|CAMRHE010000062|CAMRHE010000062.1:7623445-7627507   2.42e-63 9.28e- 18
+## 3 ENA|CAMRHE010000209|CAMRHE010000209.1:2848462-2852526   2.53e-33 9.15e- 28
+## 4 ENA|CAMRHE010000302|CAMRHE010000302.1:700758-704826     2   e-19 2   e- 19
+## 5 ENA|CAMRHE010000381|CAMRHE010000381.1:852292-856359     1.07e-96 8.59e- 73
+## 6 ENA|CAMRHE010000591|CAMRHE010000591.1:277239-281292     0        0        
+## 7 ENA|CAMRHE010000648|CAMRHE010000648.1:397223-401288     0        1.23e-180
+## 8 ENA|CAMRHE010000802|CAMRHE010000802.1:280969-285021     3.3 e-22 1.54e- 20
 ## 
-## $Dendropsophus
-## # A tibble: 19 × 1
-##    queryID                    
-##    &lt;chr&gt;                      
-##  1 SUPER_10:16140650-16144716 
-##  2 SUPER_1:145640728-145644794
-##  3 SUPER_11:37258546-37262614 
-##  4 SUPER_1:140908684-140912752
-##  5 SUPER_2:96286111-96290177  
-##  6 SUPER_2:96286111-96290177  
-##  7 SUPER_4:116815721-116819789
-##  8 SUPER_4:116815721-116819789
-##  9 SUPER_8:26099098-26103162  
-## 10 SUPER_8:26099098-26103162  
-## 11 SUPER_8:26099098-26103162  
-## 12 SUPER_10:7371246-7375307   
-## 13 SUPER_4:112859743-112863809
-## 14 SUPER_14:30232179-30236254 
-## 15 SUPER_15:49681131-49685199 
-## 16 SUPER_3:140659184-140663249
-## 17 SUPER_8:31016640-31020707  
-## 18 SUPER_2:137186796-137190864
-## 19 SUPER_4:128352658-128356726
+## $Platyplectrum
+## # A tibble: 0 × 3
+## # … with 3 variables: queryID &lt;chr&gt;, firstE &lt;dbl&gt;, scndE &lt;dbl&gt;
 ## 
-## $Hyla
-## # A tibble: 764 × 1
-##    queryID                    
-##    &lt;chr&gt;                      
-##  1 SUPER_2:335562692-335566750
-##  2 SUPER_2:335562692-335566750
-##  3 SUPER_2:335562692-335566750
-##  4 SUPER_2:335562692-335566750
-##  5 SUPER_2:335562692-335566750
-##  6 SUPER_2:335562692-335566750
-##  7 SUPER_2:335562692-335566750
-##  8 SUPER_2:335562692-335566750
-##  9 SUPER_2:335562692-335566750
-## 10 SUPER_2:335562692-335566750
-## # … with 754 more rows</code></pre>
-<p>For Dendropsophus, all three hits are many orders of magnitude different, so we just retain the firt hit. For Bufo the only searchID with multiple hits but with less than 5 order of magnitude difference were the ones that matches less than 10 regions, so we filter to retain only those, and then retain the first hit by e-value.</p>
+## $Rhinella
+## # A tibble: 1 × 3
+##   queryID                      firstE    scndE
+##   &lt;chr&gt;                         &lt;dbl&gt;    &lt;dbl&gt;
+## 1 ONZH01010706.1:18505-22573 2.55e-28 1.98e-24</code></pre>
+<p>Once again, I inspected them visuall in excel to assess which matches were 4 order than magnitude different from the second best match. Below is a list of all queryID that DID NOT match the criteria (i.e., first and second match less than 4 order of magnitude different).</p>
+<pre class="r"><code>buf2remove &lt;- c(&quot;SUPER_1:709086661-709090729&quot;,&quot;SUPER_2:200820038-200824092&quot;,
+                &quot;SUPER_2:645951670-645955731&quot;,&quot;SUPER_3:147300479-147304544&quot;,
+                &quot;SUPER_3:41116371-41120437&quot;,&quot;SUPER_5:378670322-378674388&quot;)
+gar2remove &lt;- c(&quot;CM026465.1:186712537-186716598&quot;,&quot;CM026465.1:316786201-316790247&quot;,
+                &quot;CM026470.1:387945366-387949426&quot;,&quot;CM026473.1:186541833-186545901&quot;)
+lep2remove &lt;- c(&quot;ENA|CAMRHE010000021|CAMRHE010000021.1:10133088-10137157&quot;,
+                &quot;ENA|CAMRHE010000302|CAMRHE010000302.1:700758-704826&quot;,
+                &quot;ENA|CAMRHE010000591|CAMRHE010000591.1:277239-281292&quot;,
+                &quot;ENA|CAMRHE010000802|CAMRHE010000802.1:280969-285021&quot;)
+rhi2remove &lt;- c(&quot;ONZH01010706.1:18505-22573&quot;)</code></pre>
+<p>So let’s remove those, and for the remanining matches retain the top one only</p>
 <pre class="r"><code>my.xen.list.2 &lt;- my.xen.list
 
-#for bufo the only ones with less than 5 order of magnitude difference were the ones that matches less than 10 regions
-#so we filter to retain only those, and then retain the first hit by e-value
-bufo.to.remove &lt;- my.xen.list$Bufo %&gt;% group_by(queryID) %&gt;% tally() %&gt;% filter(n&gt;10) %&gt;% pull(queryID)
+#we filter to retain only those we selected as confident matches, and then retain the first hit by e-value
 my.xen.list.2$Bufo &lt;- my.xen.list$Bufo %&gt;%
-  filter(!queryID %in% bufo.to.remove) %&gt;%
+  filter(!queryID %in% buf2remove) %&gt;%
   group_by(queryID) %&gt;%
-  slice_min(order_by = Evalue, n=1,with_ties = FALSE)#less than ten, then the first
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE)
 
-my.xen.list.2$Dendropsophus &lt;- my.xen.list$Dendropsophus %&gt;% 
+my.xen.list.2$Gargarizans &lt;- my.xen.list$Gargarizans %&gt;%
+  filter(!queryID %in% gar2remove) %&gt;%
   group_by(queryID) %&gt;%
-  slice_min(order_by = Evalue, n=1,with_ties = FALSE) #only the first
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE)
 
-#for Hyla we retain if there&#39;s only one match
-hyla.to.remove &lt;- my.xen.list$Hyla %&gt;% group_by(queryID) %&gt;% tally() %&gt;% filter(n&gt;1) %&gt;% pull(queryID)
-my.xen.list.2$Hyla &lt;- my.xen.list$Hyla %&gt;% filter(!queryID %in% hyla.to.remove)</code></pre>
+my.xen.list.2$Leptodactylus &lt;- my.xen.list$Leptodactylus %&gt;%
+  filter(!queryID %in% lep2remove) %&gt;%
+  group_by(queryID) %&gt;%
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE)
+
+my.xen.list.2$Rhinella &lt;- my.xen.list$Rhinella %&gt;%
+  filter(!queryID %in% rhi2remove) %&gt;%
+  group_by(queryID) %&gt;%
+  slice_min(order_by = Evalue, n=1,with_ties = FALSE)</code></pre>
 <p>Let’s save as text files</p>
-<pre class="r"><code>write_delim(my.xen.list.2$Bufo, file = &quot;../4_blast/3_blast_XenLaevis/16_6_aBufBuf2XenTrop.txt&quot;)
-write_delim(my.xen.list.2$Dendropsophus, file = &quot;../4_blast/3_blast_XenLaevis/16_6_aDenEbr22XenTrop.txt&quot;)
-write_delim(my.xen.list.2$Hyla, file = &quot;../4_blast/3_blast_XenLaevis/16_6_aHylSar2XenTrop.txt&quot;)</code></pre>
+<pre class="r"><code>write_delim(my.xen.list.2$Bufo,
+            file = &quot;../4_blast/3_blast_XenLaevis/16_6_BufBuf2XenTrop.txt&quot;)
+write_delim(my.xen.list.2$Gargarizans,
+            file = &quot;../4_blast/3_blast_XenLaevis/16_6_BufGar2XenTrop.txt&quot;)
+write_delim(my.xen.list.2$Leptodactylus,
+            file = &quot;../4_blast/3_blast_XenLaevis/16_6_LepFal2XenTrop.txt&quot;)
+write_delim(my.xen.list.2$Platyplectrum,
+            file = &quot;../4_blast/3_blast_XenLaevis/16_6_PlaOrn2XenTrop.txt&quot;)
+write_delim(my.xen.list.2$Rhinella,
+            file = &quot;../4_blast/3_blast_XenLaevis/16_6_RhiMar2XenTrop.txt&quot;)</code></pre>
 <p>Now we have all the info we need. Let’s clear the R environment, and then assess to what xenopus chromosomes our linkage groups match to.</p>
 </div>
 <div id="match-linkage-groups-to-chromosomes" class="section level2">
 <h2>5. Match Linkage groups to chromosomes</h2>
 <pre class="r"><code>rm(list = ls())</code></pre>
 <p>Read in matches between <em>L. serrata</em> rad tags and intermediate assemblies assembly</p>
-<pre class="r"><code>my.Buf &lt;- read_delim(&quot;../4_blast/2_blast/16_3_aBufBuf_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
+<pre class="r"><code>my.Buf &lt;- read_delim(&quot;../4_blast/2_blast/16_3_BufBuf_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
   add_column(Comparison=&quot;Bufo&quot;)
-my.Den &lt;- read_delim(&quot;../4_blast/2_blast/16_3_aDenEbr2_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
-  add_column(Comparison=&quot;Dendropsophus&quot;)
-my.Hyl &lt;- read_delim(&quot;../4_blast/2_blast/16_3_aHylSar_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
-  add_column(Comparison=&quot;Hyla&quot;)
+my.Gar &lt;- read_delim(&quot;../4_blast/2_blast/16_3_BufGar_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
+  add_column(Comparison=&quot;Gargarizans&quot;)
+my.Lep &lt;- read_delim(&quot;../4_blast/2_blast/16_3_LepFal_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
+  add_column(Comparison=&quot;Leptodactylus&quot;)
+my.Pla &lt;- read_delim(&quot;../4_blast/2_blast/16_3_PlaOrn_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
+  add_column(Comparison=&quot;Platyplectrum&quot;)
+my.Rhi &lt;- read_delim(&quot;../4_blast/2_blast/16_3_RhiMar_matches.txt&quot;, delim = &quot;\t&quot;) %&gt;%
+  add_column(Comparison=&quot;Rhinella&quot;)
 
-my.df &lt;- rbind(my.Buf,my.Den,my.Hyl)
-rm(my.Buf,my.Den,my.Hyl)</code></pre>
+my.df &lt;- rbind(my.Buf,my.Gar,my.Lep,my.Pla,my.Rhi)
+rm(my.Buf,my.Gar,my.Lep,my.Pla,my.Rhi)</code></pre>
 <p>Read in matches between intermediate assemblies and <em>Xenopus</em> assembly</p>
-<pre class="r"><code>Buf2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_aBufBuf2XenTrop.txt&quot;,
-                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Bufo&quot;) %&gt;% rename(queryID2=queryID)
+<pre class="r"><code>Buf2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_BufBuf2XenTrop.txt&quot;,
+                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Bufo&quot;) %&gt;%
+  rename(queryID2=queryID)
 
-Den2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_aDenEbr22XenTrop.txt&quot;,
-                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Dendropsophus&quot;) %&gt;% rename(queryID2=queryID)
+Gar2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_BufGar2XenTrop.txt&quot;,
+                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Gargarizans&quot;) %&gt;%
+  rename(queryID2=queryID)
 
-Hyl2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_aHylSar2XenTrop.txt&quot;,
-                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Hyla&quot;) %&gt;% rename(queryID2=queryID)
+Lep2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_LepFal2XenTrop.txt&quot;,
+                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Leptodactylus&quot;) %&gt;%
+  rename(queryID2=queryID)
 
-my.df2 &lt;- rbind(Buf2Xen,Den2Xen,Hyl2Xen)
-rm(Buf2Xen,Den2Xen,Hyl2Xen)</code></pre>
+Pla2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_PlaOrn2XenTrop.txt&quot;,
+                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Platyplectrum&quot;) %&gt;%
+  rename(queryID2=queryID)
+
+Rhi2Xen &lt;- read_delim(&quot;../4_blast/3_blast_XenLaevis/16_6_RhiMar2XenTrop.txt&quot;,
+                          delim = &quot; &quot;) %&gt;% add_column(Comparison=&quot;Rhinella&quot;) %&gt;%
+  rename(queryID2=queryID)
+
+
+
+my.df2 &lt;- rbind(Buf2Xen,Gar2Xen,Lep2Xen,Pla2Xen,Rhi2Xen)
+rm(Buf2Xen,Gar2Xen,Lep2Xen,Pla2Xen,Rhi2Xen)</code></pre>
 <p>Now add a column that will match the search sequence id in the Intermediate assembly to Xenopus comparison:</p>
 <pre class="r"><code>my.df &lt;- my.df %&gt;%
   mutate(queryID2 = paste0(searchID,&quot;:&quot;,sstart3,&quot;-&quot;,send3))</code></pre>
@@ -974,38 +1187,38 @@ rm(Buf2Xen,Den2Xen,Hyl2Xen)</code></pre>
          Comparison.Xen, Comparison.Int)</code></pre>
 <p>Let’s visualise matches between our linkage map and the Xenopus tropicalis chromosome level assembly.</p>
 <pre class="r"><code>qpvt(my.df3, &quot;searchID.Xen&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
-<pre><code>##             1  2  3  4  5  6  7  8  9  10  11  Total  
-## CM004443.2                 3  1                    4  
-## CM004445.2        2                                2  
-## CM004446.2              5                          5  
-## CM004447.2     5                                   5  
-## CM004448.2  1        4                             5  
-## CM004449.2              2        1                 3  
-## CM004450.2              1           1              2  
-## CM004451.2                              1          1  
-## CM004452.2                                  2      2  
-## Total       1  5  2  4  8  3  1  1  1   1   2     29</code></pre>
+<pre><code>##                 1  2  3  4  5  6  9  10  11  Total  
+## AAMC04000030.1                    1              1  
+## CM004443.2         1           4                 5  
+## CM004444.2      4     1                          5  
+## CM004445.2            2                   1      3  
+## CM004446.2      1           5                    6  
+## CM004447.2         8           1                 9  
+## CM004448.2               5                       5  
+## CM004449.2      1                                1  
+## CM004451.2                            2          2  
+## Total           6  9  3  5  5  5  1   2   1     37</code></pre>
 <p>There seems to be some synteny. But careful! Some of these values are inflated as the same locus matched to multiple intermediate assemblies and thus now shows as having more matches to the <strong>Xenopus</strong> assembly.</p>
-<p>Let’s filter to retain one hit per locus (multiple hits per locus are concordant).</p>
+<p>Let’s filter to retain one hit per locus (multiple hits per locus are concordant). Note, I checked that when having multiple matches per locus, they all mapped to the same X. tropicalis chromosome.</p>
 <pre class="r"><code>my.df4 &lt;- my.df3 %&gt;% distinct(queryID, .keep_all = TRUE)</code></pre>
 <p>let’s re-run it now to check the real unique matches</p>
 <pre class="r"><code>qpvt(my.df4, &quot;searchID.Xen&quot;, &quot;LG_locus&quot;, &quot;n()&quot;)</code></pre>
-<pre><code>##             1  2  3  4  5  6  7  8  9  10  11  Total  
-## CM004443.2                 2  1                    3  
-## CM004445.2        2                                2  
-## CM004446.2              3                          3  
-## CM004447.2     3                                   3  
-## CM004448.2  1        2                             3  
-## CM004449.2              1        1                 2  
-## CM004450.2              1           1              2  
-## CM004451.2                              1          1  
-## CM004452.2                                  1      1  
-## Total       1  3  2  2  5  2  1  1  1   1   1     20</code></pre>
+<pre><code>##                 1  2  3  4  5  6  9  10  11  Total  
+## AAMC04000030.1                    1              1  
+## CM004443.2         1           1                 2  
+## CM004444.2      3     1                          4  
+## CM004445.2            2                   1      3  
+## CM004446.2      1           2                    3  
+## CM004447.2         3           1                 4  
+## CM004448.2               2                       2  
+## CM004449.2      1                                1  
+## CM004451.2                            1          1  
+## Total           5  4  3  2  2  2  1   1   1     21</code></pre>
 </div>
 <div id="summary" class="section level2">
 <h2>6. Summary</h2>
-<p>It does appear that there is some level of synteny between the linkage maps produced here and the 4 genome assemblies we investigated (<em>Bufo bufo</em>, <em>Dendropsophus ebraccatus</em>, <em>Hyla sarda</em> and <em>Xenopus tropicalis</em>).</p>
-<p>For direct comparisons, the signal is stronger with Hyla&gt;Bufo&gt;Dendropsophus in this order. Unfortunately against the <em>Xenopus</em> chromosome level assembly we only have 20 unique hits, which, spread across 13 linkage groups and with possible re-arrangements and/or errors, make it hard to confirm whether the observed synteny represents a true signal (e.g., LG2 in our map is homologous to Chromosome CM004447 in <em>Xenopus</em>) or whether we obtained two hits for that linkage group by chance.</p>
+<p>It does appear that there is some level of synteny between the linkage maps produced here and the 6 genome assemblies we investigated (<em>Bufo bufo</em>, <em>Bufo gargarizans</em>, <em>Leptodactylus fallax</em>, <em>Platyplectrum ornatum</em>, <em>Rhinella marina</em> and <em>Xenopus tropicalis</em>).</p>
+<p>Unfortunately against the <em>Xenopus</em> chromosome level assembly we only have 21 unique hits, which, spread across 13 linkage groups and with possible re-arrangements and/or errors, make it hard to confirm whether the observed synteny represents a true signal (e.g., LG2 in our map is homologous to Chromosome CM004447 in <em>Xenopus</em>) or whether we obtained three hits for that linkage group by chance.</p>
 </div>
 
 
