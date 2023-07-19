@@ -18,7 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: High Density Linkage Map for Litoria serrata
+title: "The first Linkage Map for Litoria serrata: Supplementary Code documentation"
 email: lorenzo.bertola@my.jcu.edu.au
 description: >- # this means to ignore newlines until "baseurl:"
   Supplementary code for the paper "The first high-density linkage map for Australopapuan Treefrogs (Family: Pelodryadidae) reveals the sex determining locus of the Green-eyed Treefrog (Litoria serrata).".
