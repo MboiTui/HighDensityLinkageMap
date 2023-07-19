@@ -22,7 +22,7 @@ title: High Density Linkage Map for Litoria serrata
 email: lorenzo.bertola@my.jcu.edu.au
 description: >- # this means to ignore newlines until "baseurl:"
   Supplementary code for the paper "The first high-density linkage map for Australopapuan Treefrogs (Family: Pelodryadidae) reveals the sex determining locus of the Green-eyed Treefrog (Litoria serrata).".
-baseurl: "" # the subpath of your site, e.g. /blog HighDensityLinkageMap
+baseurl: "/" # the subpath of your site, e.g. /blog HighDensityLinkageMap
 url: https://mboitui.github.io/HighDensityLinkageMap # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: ItsFrogday
 github_username:  MboiTui
