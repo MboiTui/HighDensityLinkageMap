@@ -8,7 +8,7 @@ layout: home
 
 Code and supplementary materials for the manuscript ***The first high-density linkage map for Australopapuan Treefrogs (Family: Pelodryadidae) reveals the sex determining locus of the Green-eyed Treefrog (Litoria serrata)***,
 by Lorenzo V. Bertola, Conrad J. Hoskin, Kyall Zenger, Donald McKnight and Megan Higgie
-published in Heredity.
+published in Heredity [https://doi.org/10.1038/s41437-023-00642-5].
 
 ![ReplaceWithGraphicalAbstract](CuteFrog.png)
 
